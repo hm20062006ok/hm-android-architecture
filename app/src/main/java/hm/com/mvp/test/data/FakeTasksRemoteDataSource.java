@@ -94,7 +94,6 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
     @Override
     public void refreshTasks() {
         //{@link TaskRepository} 在所有可用的数据源中处理需要刷新的任务
-        // TODO: 2017/3/13 刷新逻辑
     }
 
     @Override

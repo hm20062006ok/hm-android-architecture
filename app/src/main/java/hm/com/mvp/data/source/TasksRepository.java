@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * ${Description}
  * Created by HuMiao on  2017/3/10
  */
-public class TasksRepository implements TasksDataSource{
+public class TasksRepository implements TasksDataSource {
     private static final String TAG = TasksRepository.class.getName();
     @Nullable
     private static TasksRepository INSTANCE = null;
@@ -38,7 +38,7 @@ public class TasksRepository implements TasksDataSource{
     boolean mCacheIsDirty = false;
 
     private TasksRepository(@NonNull TasksDataSource tasksRemoteDataSource,
-                            @NonNull TasksDataSource tasksLocalDataSource){
+                            @NonNull TasksDataSource tasksLocalDataSource) {
         mTasksRemoteDataSource = checkNotNull(tasksRemoteDataSource);
         mTasksLocalDataSource = checkNotNull(tasksLocalDataSource);
     }
@@ -51,23 +51,51 @@ public class TasksRepository implements TasksDataSource{
         return INSTANCE;
     }
 
-    public static void destoryInstance(){
+    public static void destoryInstance() {
         INSTANCE = null;
     }
 
     @Override
     public Observable<List<Task>> getTasks() {
 
+      /*  // Respond immediately with cache if available and not dirty
+        //如果缓存可用且不需要强制刷新, 则立即返回响应
         if (mCachedTasks != null && !mCacheIsDirty) {
+            Log.d(TAG, "return Tasks from cache");
             return Observable.from(mCachedTasks.values()).toList();
-        }else if(mCachedTasks == null){
+        } else if (mCachedTasks == null) {
             mCachedTasks = new LinkedHashMap<>();
         }
+
+        Observable<List<Task>> localTasks = getAndCacheLocalTasks();
+
+        if (!mCacheIsDirty){
+            Log.d(TAG, "return Tasks from local");
+            return localTasks;
+        }else{
+            Log.d(TAG, "return Tasks from remote");
+            Observable<List<Task>> remoteTasks = getAndSaveRemoteTasks();
+            return Observable.concat(remoteTasks, localTasks)
+                    .filter(tasks -> !tasks.isEmpty())
+                    .first();
+        }*/
+
+        // Respond immediately with cache if available and not dirty
+        if (mCachedTasks != null && !mCacheIsDirty) {
+            Log.d(TAG, "return Tasks from cache");
+            return Observable.from(mCachedTasks.values()).toList();
+        } else if (mCachedTasks == null) {
+            mCachedTasks = new LinkedHashMap<>();
+        }
+
         Observable<List<Task>> remoteTasks = getAndSaveRemoteTasks();
 
-        if(mCacheIsDirty){
+        if (mCacheIsDirty) {
+            Log.d(TAG, "return Tasks from remote");
             return remoteTasks;
-        }else{
+        } else {
+            Log.d(TAG, "return Tasks from local");
+            // Query the local storage if available. If not, query the network.
             Observable<List<Task>> localTasks = getAndCacheLocalTasks();
             return Observable.concat(localTasks, remoteTasks)
                     .filter(tasks -> !tasks.isEmpty())
@@ -96,12 +124,17 @@ public class TasksRepository implements TasksDataSource{
                         return Observable.from(tasks)
                                 .doOnNext(task -> {
                                     mTasksLocalDataSource.saveTask(task);
-                                    mCachedTasks.put(task.getId(),task);
+                                    mCachedTasks.put(task.getId(), task);
                                 })
                                 .toList();
                     }
                 })
-                .doOnCompleted(() -> mCacheIsDirty = false);
+                .doOnCompleted(() -> {
+
+                    mCacheIsDirty = false;
+                    Log.d(TAG, "doOnCompleted" + mCacheIsDirty);
+                });
+
     }
 
     @Override
@@ -124,7 +157,7 @@ public class TasksRepository implements TasksDataSource{
                     mTasksLocalDataSource.saveTask(task);
                     mCachedTasks.put(task.getId(), task);
                 });
-        return Observable.concat(localTask,remoteTask).first()
+        return Observable.concat(localTask, remoteTask).first()
                 .map(task -> {
                     if (task == null) {
                         throw new NoSuchElementException("No task found with taskId " + taskId);
@@ -185,7 +218,7 @@ public class TasksRepository implements TasksDataSource{
     public void activateTask(@NonNull String taskId) {
         checkNotNull(taskId);
         Task taskWithId = getTaskWithId(taskId);
-        if (null != taskWithId) {
+        if (taskWithId != null) {
             activateTask(taskWithId);
         }
     }
@@ -208,8 +241,7 @@ public class TasksRepository implements TasksDataSource{
 
     @Override
     public void refreshTasks() {
-        Log.d(TAG, "refreshTasks: " + mCacheIsDirty);
-            mCacheIsDirty = true;
+        mCacheIsDirty = true;
     }
 
     @Override
@@ -230,11 +262,11 @@ public class TasksRepository implements TasksDataSource{
     }
 
     @NonNull
-    private Task getTaskWithId(@NonNull String id){
+    private Task getTaskWithId(@NonNull String id) {
         checkNotNull(id);
         if (mCachedTasks == null || mCachedTasks.isEmpty()) {
             return null;
-        }else{
+        } else {
             return mCachedTasks.get(id);
         }
     }
@@ -243,7 +275,7 @@ public class TasksRepository implements TasksDataSource{
     Observable<Task> getTaskWithIdFromLocalRepository(String taskId) {
         return mTasksLocalDataSource
                 .getTask(taskId)
-                .doOnNext(task -> mCachedTasks.put(taskId,task))
+                .doOnNext(task -> mCachedTasks.put(taskId, task))
                 .first();
     }
 }

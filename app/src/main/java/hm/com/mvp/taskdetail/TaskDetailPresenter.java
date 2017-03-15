@@ -47,6 +47,7 @@ class TaskDetailPresenter implements TaskDetailContract.Presenter{
     public void unsubscribe() {
         mSubcriptions.clear();
     }
+
     private void openTask(){
         if (Strings.isNullOrEmpty(mTaskId)) {
             mTaskDetailView.showMissingTask();

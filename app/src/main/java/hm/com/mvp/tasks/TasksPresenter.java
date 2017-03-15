@@ -84,6 +84,7 @@ class TasksPresenter implements TasksContract.Presenter {
             mTasksView.setLoadingIndicator(true);
         }
 
+        Log.d(TAG, "强制更新:" + forceUpdate);
         if (forceUpdate) {
             mTaskRepository.refreshTasks();
         }
@@ -115,21 +116,23 @@ class TasksPresenter implements TasksContract.Presenter {
                         new Action1<List<Task>>() {
                             @Override
                             public void call(List<Task> tasks) {
-                                Log.d(TAG, "tasks: ");
+                                Log.d(TAG, "onNext: ");
                                 TasksPresenter.this.processTasks(tasks);
+                                mTasksView.setLoadingIndicator(false);
                             }
                         },
                         new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                Log.d(TAG, "throwable: ");
+                                Log.d(TAG, "onError: ");
                                 mTasksView.showLoadingTasksError();
+                                mTasksView.setLoadingIndicator(false);
                             }
                         },
                         new Action0() {
                             @Override
                             public void call() {
-                                Log.d(TAG, "call: xxx");
+                                Log.d(TAG, "onComplete");
                                 mTasksView.setLoadingIndicator(false);
                             }
                         });
@@ -139,7 +142,7 @@ class TasksPresenter implements TasksContract.Presenter {
     private void processTasks(@NonNull List<Task> tasks) {
 
         boolean taskIsEmpty = tasks.isEmpty();
-        Log.d(TAG, "task is empty : " + taskIsEmpty);
+        Log.d(TAG, "task is empty  == " + taskIsEmpty);
         if (taskIsEmpty) {
             // Show a message indicating there are no tasks for that filter type.
             processEmptyTasks();

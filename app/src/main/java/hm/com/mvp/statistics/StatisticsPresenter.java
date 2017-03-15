@@ -44,7 +44,7 @@ public class StatisticsPresenter implements StatisticsContract.Presenter {
         Observable<Task> tasks = mTasksRepository
                 .getTasks()
                 .flatMap(Observable::from);
-        Observable<Integer> completedTasks = tasks.first(Task::isCompleted).count();
+        Observable<Integer> completedTasks = tasks.filter(Task::isCompleted).count();
         Observable<Integer> activeTasks = tasks.filter(Task::isActive).count();
         Subscription subscription = Observable
                 .zip(completedTasks, activeTasks, (completed, active) -> Pair.create(active, completed))

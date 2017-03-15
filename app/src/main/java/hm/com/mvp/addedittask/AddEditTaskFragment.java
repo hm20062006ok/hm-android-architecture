@@ -55,17 +55,14 @@ public class AddEditTaskFragment  extends Fragment implements AddEditTaskContrac
         fab.setImageResource(R.drawable.ic_done);
         // __ ->   :  __ 表示一个参数
         fab.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View __) {
+                __ -> {
 
-                        String title = mTitle.getText().toString();
-                        String description = mDescription.getText().toString();
-                        Log.d(TAG, "title : " + title);
-                        Log.d(TAG, "description : " + description);
-                        mPresenter.saveTask(title,
-                                description);
-                    }
+                    String title = mTitle.getText().toString();
+                    String description = mDescription.getText().toString();
+                    Log.d(TAG, "title : " + title);
+                    Log.d(TAG, "description : " + description);
+                    mPresenter.saveTask(title,
+                            description);
                 });
 
     }

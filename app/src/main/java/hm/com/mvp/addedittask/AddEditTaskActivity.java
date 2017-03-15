@@ -48,12 +48,10 @@ public class AddEditTaskActivity extends AppCompatActivity{
             shouldLoadDataFromRepo = savedInstanceState.getBoolean(SHOULD_LOAD_DATA_FROM_REPO_KEY);
         }
 
-        mAddEditTaskPresenter = new AddEditTaskPresenter(taskId, Injection.provideTasksRepository(getApplicationContext()),
+        new AddEditTaskPresenter(taskId, Injection.provideTasksRepository(getApplicationContext()),
                 addEditTaskFragment,
                 shouldLoadDataFromRepo,
                 Injection.provideSchedulerProvider());
-        addEditTaskFragment.setPresenter(mAddEditTaskPresenter);
-
     }
 
     @Override
